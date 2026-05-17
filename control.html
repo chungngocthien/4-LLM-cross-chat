@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Control Panel</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 15px;
+      background: #1e1e1e;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    #mainPrompt {
+      width: 100%;
+      height: 80px;
+      background: #2d2d2d;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 10px;
+      box-sizing: border-box;
+      font-family: monospace;
+      font-size: 13px;
+      resize: none;
+    }
+
+    #controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      align-items: center;
+    }
+
+    button {
+      background: #3a3a3a;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    button:hover { background: #4a4a4a; }
+    #redistributeBtn { border-color: #4da6ff; color: #4da6ff; }
+
+    .hint { font-size: 11px; color: #666; }
+
+    #results {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .col { flex: 1; }
+
+    .col h4 {
+      margin: 0 0 6px 0;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .resultBox {
+      background: #2d2d2d;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 200px;
+      font-size: 13px;
+      line-height: 1.6;
+      outline: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-y: auto;
+      max-height: 80vh;
+      cursor: text;
+    }
+
+    .resultBox p[data-ai] {
+      color: #ffffff;
+      margin: 0 0 1em 0;
+      min-height: 1em;
+      white-space: pre-wrap;
+    }
+
+    .resultBox p:not([data-ai]),
+    .resultBox div:not([data-ai]) {
+      color: #4da6ff;
+      margin: 0 0 1em 0;
+      white-space: pre-wrap;
+    }
+
+    .resultBox:focus { border-color: #4da6ff44; }
+
+    .resultBox p[data-spacer] {
+  margin: 0;
+  min-height: 0.8em;
+  /* bỏ color: transparent */
+}
+
+    .resultBox p[data-ai] {
+  color: #ffffff;
+  margin: 0;
+  min-height: 1em;
+  white-space: pre-wrap;
+}
+  </style>
+</head>
+<body>
+
+  <textarea id="mainPrompt" placeholder="Prompt chính — Ctrl+Enter để gửi..."></textarea>
+
+  <div id="controls">
+    <button id="redistributeBtn">⟳ Redistribute (Alt+Enter)</button>
+    <span class="hint">Gõ think vào box → Alt+Enter để redistribute</span>
+  </div>
+
+  <div id="results">
+    <div class="col">
+      <h4>ChatGPT</h4>
+      <div class="resultBox" id="chatgptBox" contenteditable="true" spellcheck="false"></div>
+    </div>
+    <div class="col">
+      <h4>Gemini</h4>
+      <div class="resultBox" id="geminiBox" contenteditable="true" spellcheck="false"></div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron')
+    const aiNodeSets = {
+  chatgptBox: new WeakSet(),
+  geminiBox: new WeakSet()
+}
+    const aiTextSets = {
+  chatgptBox: new Set(),
+  geminiBox: new Set()
+}
+
+document.addEventListener('copy', (e) => {
+  const sel = window.getSelection()
+  if (!sel.rangeCount) return
+  const div = document.createElement('div')
+  div.appendChild(sel.getRangeAt(0).cloneContents())
+  let text = ''
+  div.childNodes.forEach(n => {
+    text += n.textContent + (n.nodeName === 'P' ? '\n\n' : '')
+  })
+  e.clipboardData.setData('text/plain', text.trimEnd())
+  e.preventDefault()
+})
+
+function setBoxContent(boxId, text) {
+  const box = document.getElementById(boxId)
+  box.innerHTML = ''
+
+  const lines = text.split('\n')
+  let prevWasSpacer = false
+
+  lines.forEach((line) => {
+    const p = document.createElement('p')
+    if (line.trim() === '') {
+      if (prevWasSpacer) return  // bỏ qua spacer liên tiếp
+      p.setAttribute('data-spacer', '1')
+      p.appendChild(document.createElement('br'))
+      prevWasSpacer = true
+    } else {
+      p.setAttribute('data-ai', '1')
+      p.setAttribute('data-original', line.trim())
+      p.appendChild(document.createTextNode(line))
+      prevWasSpacer = false
+    }
+    box.appendChild(p)
+  })
+}
+
+    ipcRenderer.on('chatgpt-response', (event, text) => {
+      setBoxContent('chatgptBox', text)
+    })
+
+    ipcRenderer.on('gemini-response', (event, text) => {
+      setBoxContent('geminiBox', text)
+    })
+
+    function parseBoxNodes(boxId) {
+  const box = document.getElementById(boxId)
+  const segments = []
+
+  box.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.textContent.trim()
+      if (t) segments.push({ type: 'think', text: t })
+      return
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return
+
+    const t = node.textContent.trim()
+
+    // Spacer có text = user đã gõ vào đó → là think
+    if (node.hasAttribute('data-spacer')) {
+      if (t) segments.push({ type: 'think', text: t })
+      return
+    }
+
+    if (!t) return
+
+    const original = node.getAttribute('data-original')
+
+    if (original !== null) {
+      if (t === original) {
+        segments.push({ type: 'ai', text: t })
+      } else {
+        segments.push({ type: 'ai', text: original })
+        const added = t.replace(original, '').trim()
+        if (added) segments.push({ type: 'think', text: added })
+      }
+    } else {
+      segments.push({ type: 'think', text: t })
+    }
+  })
+
+  return segments
+}
+
+    function buildChatGPTPrompt(boxId) {
+      const segments = parseBoxNodes(boxId)
+      const parts = []
+
+      for (let i = 0; i < segments.length; i++) {
+        if (segments[i].type === 'think') {
+          let prevAI = ''
+          for (let j = i - 1; j >= 0; j--) {
+            if (segments[j].type === 'ai') {
+              prevAI = segments[j].text
+              break
+            }
+          }
+          if (prevAI) parts.push(prevAI)
+          parts.push(`[${segments[i].text}]`)
+        }
+      }
+
+      return parts.join('\n\n')
+    }
+
+    function buildFullPromptRaw(boxId) {
+  const segments = parseBoxNodes(boxId)
+  return segments.map(s => {
+    if (s.type === 'think') return `[${s.text}]`
+    return s.text
+  }).join('\n\n')
+}
+    
+    function buildFullPrompt(boxId) {
+  const segments = parseBoxNodes(boxId)
+  let lastThinkIdx = -1
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (segments[i].type === 'think') { lastThinkIdx = i; break }
+  }
+  const relevant = lastThinkIdx === -1
+    ? segments
+    : segments.slice(0, lastThinkIdx + 1)
+  return relevant.map(s => {
+    if (s.type === 'think') return `[${s.text}]`
+    return s.text
+  }).join('\n\n')
+}
+
+    const mainPrompt = document.getElementById('mainPrompt')
+
+    function redistribute() {
+  const mainText = mainPrompt.value.trim()
+
+  const chatgptSelf = buildFullPrompt('chatgptBox')      // cắt tại think cuối
+  const chatgptFull = buildFullPromptRaw('chatgptBox')   // toàn bộ — gửi cho Gemini
+  const geminiSelf  = buildFullPrompt('geminiBox')       // cắt tại think cuối
+  const geminiFull  = buildFullPromptRaw('geminiBox')    // toàn bộ — gửi cho ChatGPT
+
+  if (!chatgptSelf && !geminiSelf) return
+
+  let finalChatGPT = mainText ? mainText + '\n\n' : ''
+  finalChatGPT += 'ChatGPT:\n' + chatgptSelf
+  if (geminiFull) finalChatGPT += '\n\nGemini:\n' + geminiFull
+
+  let finalGemini = mainText ? mainText + '\n\n' : ''
+  if (chatgptFull) finalGemini += 'ChatGPT:\n' + chatgptFull + '\n\n'
+  finalGemini += 'Gemini:\n' + geminiSelf
+
+  console.log('Sending chatgpt:', JSON.stringify(finalChatGPT.trim()))
+  console.log('Sending gemini:', JSON.stringify(finalGemini.trim()))
+
+  ipcRenderer.send('redistribute-prompt', {
+    chatgpt: finalChatGPT.trim(),
+    gemini:  finalGemini.trim()
+  })
+}
+
+    document.getElementById('redistributeBtn')
+      .addEventListener('click', redistribute)
+
+    document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    const focused = document.activeElement
+    if (focused === mainPrompt) {
+      // Ctrl+Enter trên mainPrompt → gửi prompt mới
+      const text = mainPrompt.value.trim()
+      if (!text) return
+      setBoxContent('chatgptBox', 'Đang xử lý...')
+      setBoxContent('geminiBox', 'Đang xử lý...')
+      ipcRenderer.send('send-prompt', text)
+    } else {
+      // Ctrl+Enter ở chỗ khác (box kết quả) → redistribute
+      redistribute()
+    }
+  }
+})
+  </script>
+
+</body>
+</html>
