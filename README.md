@@ -13,7 +13,7 @@ Projects can be saved as links for future access.
 
 In short, I view this as a "mini AI Agent," as I haven't implemented recursive processing yet.
 
-If you are interested in the development process, simply feed the `narrative-log.txt` file from the repository into any LLM, and it will explain the full story to you. I am also cultivating the habit of preserving "memories" for LLMs.
+If you are interested in the development process, simply feed the [`narrative-log.txt`](https://github.com/chungngocthien/4-LLM-cross-chat/blob/main/narrative-log.md) file from the repository into any LLM, and it will explain the full story to you. I am also cultivating the habit of preserving "memories" for LLMs.
 
 Watch the video where I discuss the project to see it in action—click the image below.
 
