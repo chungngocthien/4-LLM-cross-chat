@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    body {
+      background: transparent;
+      overflow: hidden;
+      /* Drag toàn bộ window để reposition nếu cần */
+      -webkit-app-region: drag;
+    }
+ 
+    #tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 0;
+      -webkit-app-region: no-drag;
+    }
+ 
+    .tab {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+      color: #fff;
+      opacity: 0.55;
+      transition: opacity 0.15s, transform 0.15s;
+      user-select: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-right: none;
+    }
+ 
+    .tab:hover  { opacity: 0.85; transform: translateX(-3px); }
+    .tab.active { opacity: 1;    transform: translateX(-5px); }
+ 
+    .tab.gpt { background: #19c37d22; border-color: #19c37d66; color: #19c37d; }
+    .tab.gem { background: #8ab4f822; border-color: #8ab4f866; color: #8ab4f8; }
+    .tab.clo { background: #d4a96a22; border-color: #d4a96a66; color: #d4a96a; }
+    .tab.grk { background: #cc99ff22; border-color: #cc99ff66; color: #cc99ff; }
+ 
+    .tab.gpt.active { background: #19c37d44; }
+    .tab.gem.active { background: #8ab4f844; }
+    .tab.clo.active { background: #d4a96a44; }
+    .tab.grk.active { background: #cc99ff44; }
+  </style>
+</head>
+<body>
+  <div id="tabs">
+    <div class="tab gpt" data-llm="chatgpt">GPT</div>
+    <div class="tab gem" data-llm="gemini">GEM</div>
+    <div class="tab clo" data-llm="claude">CLO</div>
+    <div class="tab grk" data-llm="grok">GRK</div>
+  </div>
+ 
+  <script>
+    const { ipcRenderer } = require('electron')
+ 
+    let activeLlm = null
+ 
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const llm = tab.dataset.llm
+ 
+        if (activeLlm === llm) {
+          // Click lại icon đang active → ẩn đi
+          ipcRenderer.send('tab-toggle', { llm: null })
+          tab.classList.remove('active')
+          activeLlm = null
+        } else {
+          // Chuyển sang LLM mới
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+          tab.classList.add('active')
+          activeLlm = llm
+          ipcRenderer.send('tab-toggle', { llm })
+        }
+      })
+    })
+ 
+    // Sync trạng thái nếu cần reset từ bên ngoài
+    ipcRenderer.on('tab-reset', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+      activeLlm = null
+    })
+  </script>
+</body>
+</html>

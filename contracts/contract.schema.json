@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "execution-contract.v4.1.json",
+  "title": "Execution Contract Metadata Block (V4.1)",
+  "description": "Schema for the YAML-like frontmatter block at the top of an Execution Contract .md file. Parser reads; Validator enforces. Two responsibilities are intentionally separate — parser must not silently fix invalid data.",
+  "type": "object",
+  "required": [
+    "BOUNTY_ID",
+    "TARGET_MODULE",
+    "EVIDENCE_TYPE",
+    "SIGNAL_SCORE",
+    "LEVERAGE_SCORE",
+    "PAIN_RECURRENCE",
+    "DIFFICULTY",
+    "ASSET_CLASS",
+    "PRIMARY_STACK"
+  ],
+  "properties": {
+    "BOUNTY_ID": {
+      "type": "string",
+      "pattern": "^BTY-\\d{4}-\\d{4}-\\d{2}$",
+      "description": "Format: BTY-YYYY-MMDD-NN. NN is the bounty index for that day, zero-padded."
+    },
+    "TARGET_MODULE": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Snake-case module identifier."
+    },
+    "EVIDENCE_TYPE": {
+      "type": "string",
+      "enum": ["EXTERNAL_MARKET", "INTERNAL_TELEMETRY"]
+    },
+    "SIGNAL_SCORE": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "multipleOf": 0.1
+    },
+    "LEVERAGE_SCORE": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "multipleOf": 0.1
+    },
+    "PAIN_RECURRENCE": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"]
+    },
+    "DIFFICULTY": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"]
+    },
+    "ASSET_CLASS": {
+      "type": "string",
+      "enum": ["B2B_CORE_LICENSE", "B2B_TOOL", "RESEARCH_ARTIFACT", "INFRASTRUCTURE"]
+    },
+    "PRIMARY_STACK": {
+      "type": "string",
+      "enum": ["TYPESCRIPT", "JAVASCRIPT", "RUST", "PYTHON", "GO", "CPP"]
+    },
+    "ABSTRACTION_HASH": {
+      "type": ["string", "null"],
+      "description": "Layer 2.5 placeholder. Null until Abstraction Extraction is implemented. Format when set: sha256 hex string (64 lowercase hex chars).",
+      "default": null,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "PAIN_CLUSTER_ID": {
+      "type": ["string", "null"],
+      "description": "Layer 2.5 placeholder. Null until pain points are clustered. Format when set: PCL-YYYY-NNNN.",
+      "default": null,
+      "pattern": "^PCL-\\d{4}-\\d{4}$"
+    }
+  },
+  "additionalProperties": false
+}

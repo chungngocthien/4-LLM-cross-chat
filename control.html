@@ -2,322 +2,1283 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Control Panel</title>
+  <title>Control Panel — 4 LLM</title>
   <style>
+    * { box-sizing: border-box; }
+ 
     body {
       font-family: sans-serif;
-      padding: 15px;
+      padding: 12px;
       background: #1e1e1e;
       color: #ffffff;
       margin: 0;
     }
-
+ 
     #mainPrompt {
       width: 100%;
-      height: 80px;
+      height: 70px;
       background: #2d2d2d;
       color: #fff;
       border: 1px solid #444;
       border-radius: 4px;
       padding: 10px;
-      box-sizing: border-box;
       font-family: monospace;
       font-size: 13px;
       resize: none;
     }
-
+ 
+    #mainPrompt.crossview-mode {
+      color: #666;
+      border-color: #333;
+    }
+ 
     #controls {
       display: flex;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
       align-items: center;
     }
-
-    button {
-      background: #3a3a3a;
-      color: #fff;
-      border: 1px solid #555;
-      border-radius: 4px;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    button:hover { background: #4a4a4a; }
-    #redistributeBtn { border-color: #4da6ff; color: #4da6ff; }
-
+ 
     .hint { font-size: 11px; color: #666; }
-
-    #results {
+ 
+    /* Account bar */
+    #accountBar {
       display: flex;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 6px;
+      align-items: center;
+      margin-left: auto;
     }
-
-    .col { flex: 1; }
-
-    .col h4 {
-      margin: 0 0 6px 0;
+ 
+    .accGroup {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+ 
+    .accLabel {
+      font-size: 9px;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+    }
+ 
+    .accLabel.all { color: #ffffff; }
+    .accLabel.gpt { color: #19c37d; }
+    .accLabel.gem { color: #8ab4f8; }
+    .accLabel.clo { color: #d4a96a; }
+    .accLabel.grk { color: #cc99ff; }
+ 
+    .accInput {
+      width: 32px;
+      height: 20px;
+      background: #2d2d2d;
+      border: 1px solid #444;
+      border-radius: 3px;
+      color: #fff;
       font-size: 11px;
-      color: #666;
+      font-family: monospace;
+      text-align: center;
+      padding: 0;
+      -moz-appearance: textfield;
+    }
+    .accInput::-webkit-inner-spin-button { display: none; }
+    .accInput:focus { outline: none; border-color: #666; }
+ 
+    /* Divider giữa ALL và per-LLM */
+    .accDivider {
+      width: 1px;
+      height: 16px;
+      background: #444;
+      margin: 0 2px;
+    }
+ 
+    /* 4 cột kết quả */
+    #results {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+ 
+    .col h4 {
+      margin: 0 0 4px 0;
+      font-size: 11px;
+      color: #888;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-
+ 
+    .col.chatgpt h4 { color: #19c37d; }
+    .col.gemini  h4 { color: #8ab4f8; }
+    .col.claude  h4 { color: #d4a96a; }
+    .col.grok    h4 { color: #cc99ff; }
+ 
     .resultBox {
       background: #2d2d2d;
       border: 1px solid #444;
       border-radius: 6px;
       padding: 10px;
-      min-height: 200px;
-      font-size: 13px;
-      line-height: 1.6;
+      min-height: 180px;
+      max-height: 380px;
+      font-size: 12px;
+      line-height: 1.5;
       outline: none;
-      white-space: pre-wrap;
       word-break: break-word;
       overflow-y: auto;
-      max-height: 80vh;
       cursor: text;
     }
-
+ 
+    .col.chatgpt .resultBox:focus { border-color: #19c37d44; }
+    .col.gemini  .resultBox:focus { border-color: #8ab4f844; }
+    .col.claude  .resultBox:focus { border-color: #d4a96a44; }
+    .col.grok    .resultBox:focus { border-color: #cc99ff44; }
+ 
     .resultBox p[data-ai] {
       color: #ffffff;
-      margin: 0 0 1em 0;
+      margin: 0;
       min-height: 1em;
       white-space: pre-wrap;
     }
-
-    .resultBox p:not([data-ai]),
-    .resultBox div:not([data-ai]) {
+ 
+    .resultBox p[data-spacer] {
+      margin: 0;
+      min-height: 0.8em;
+    }
+ 
+    .col.chatgpt .resultBox p:not([data-ai]):not([data-spacer]) { color: #19c37d; }
+    .col.gemini  .resultBox p:not([data-ai]):not([data-spacer]) { color: #8ab4f8; }
+    .col.claude  .resultBox p:not([data-ai]):not([data-spacer]) { color: #d4a96a; }
+    .col.grok    .resultBox p:not([data-ai]):not([data-spacer]) { color: #cc99ff; }
+ 
+    .col.chatgpt .resultBox p[data-spacer]:not(:empty) { color: #19c37d; }
+    .col.gemini  .resultBox p[data-spacer]:not(:empty) { color: #8ab4f8; }
+    .col.claude  .resultBox p[data-spacer]:not(:empty) { color: #d4a96a; }
+    .col.grok    .resultBox p[data-spacer]:not(:empty) { color: #cc99ff; }
+ 
+    /* secondPrompt */
+    #secondPromptWrap {
+      display: none;
+      margin-top: 10px;
+    }
+    #secondPromptWrap.visible { display: block; }
+ 
+    #secondPromptWrap h4 {
+      font-size: 11px;
       color: #4da6ff;
-      margin: 0 0 1em 0;
-      white-space: pre-wrap;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0 0 4px 0;
+    }
+ 
+    #secondPrompt {
+      width: 100%;
+      height: 70px;
+      background: #1a2430;
+      color: #fff;
+      border: 1px solid #4da6ff44;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 13px;
+      resize: none;
+    }
+ 
+    /* Usage bar */
+    #usageBar {
+      font-size: 10px;
+      font-family: monospace;
+      color: #555;
+      margin-top: 5px;
+      display: flex;
+      gap: 12px;
+    }
+ 
+    #usageBar span { color: #666; }
+    #usageBar .val { color: #999; }
+    #usageBar .today-val { color: #4da6ff; }
+ 
+    #modeIndicator {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      display: none;
+    }
+    #modeIndicator.crossview {
+      display: inline-block;
+      background: #4da6ff22;
+      color: #4da6ff;
+      border: 1px solid #4da6ff44;
     }
 
-    .resultBox:focus { border-color: #4da6ff44; }
+    /* System box */
+#systemBox {
+  display: none;
+  margin-top: 8px;
+  background: #1e1e1e;
+  border: 1px solid #f5a62366;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #f5a623;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
+#systemBox.visible { display: block; }
+#systemBox .sys-dim { color: #f5a62388; }
+#systemBox .sys-ok  { color: #19c37d; }
+#systemBox .sys-err { color: #ff6b6b; }
 
-    .resultBox p[data-spacer] {
-  margin: 0;
-  min-height: 0.8em;
-  /* bỏ color: transparent */
+/* Project indicator */
+#projectIndicator {
+  font-size: 10px;
+  font-family: monospace;
+  color: #f5a62388;
+  margin-top: 3px;
+  min-height: 14px;
+}
+#projectIndicator.active { color: #f5a623; }
+
+#mainPrompt.cmd-mode {
+  color: #f5a623;
+  border-color: #f5a62366;
 }
 
-    .resultBox p[data-ai] {
-  color: #ffffff;
-  margin: 0;
-  min-height: 1em;
-  white-space: pre-wrap;
+#sidetabs {
+  position: fixed;
+  right: 0;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+  z-index: 9999;
+}
+
+.stab {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px 0 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: monospace;
+  color: #fff;
+  opacity: 0.55;
+  transition: opacity 0.15s, transform 0.15s;
+  user-select: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-right: none;
+}
+
+.stab:hover  { opacity: 0.85; transform: translateX(-3px); }
+.stab.active { opacity: 1;    transform: translateX(-5px); }
+
+.stab.gpt { background: #19c37d22; border-color: #19c37d66; color: #19c37d; }
+.stab.gem { background: #8ab4f822; border-color: #8ab4f866; color: #8ab4f8; }
+.stab.clo { background: #d4a96a22; border-color: #d4a96a66; color: #d4a96a; }
+.stab.grk { background: #cc99ff22; border-color: #cc99ff66; color: #cc99ff; }
+
+.stab.gpt.active { background: #19c37d44; }
+.stab.gem.active { background: #8ab4f844; }
+.stab.clo.active { background: #d4a96a44; }
+.stab.grk.active { background: #cc99ff44; }
+
+.resultBox span[data-broadcast] {
+  font-weight: 700;
+  color: #c636ff;
+  display: inline-block;
+}
+
+.scratchBtn {
+  width: 22px;
+  height: 20px;
+  background: #2d2d2d;
+  border: 1px solid #f5a62366;
+  border-radius: 3px;
+  color: #f5a623;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.scratchBtn:hover {
+  background: #f5a62322;
+  border-color: #f5a623;
+}
+.scratchBtn:active {
+  background: #f5a62344;
+}
+
+#noteWrap { display: none; margin-top: 10px; }
+#noteWrap.visible { display: block; }
+
+#noteWrap h4 {
+  font-size: 11px;
+  color: #f5a623;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 4px 0;
+}
+
+#noteBox {
+  width: 100%;
+  min-height: 380px;
+  max-height: 600px;
+  background: #2d2d2d;
+  color: #fff;
+  border: 1px solid #f5a62366;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+#noteBox:focus { outline: none; border-color: #f5a623; }
+
+.scratchBtn.active {
+  background: #f5a62344;
+  color: #fff;
 }
   </style>
 </head>
 <body>
-
+ 
   <textarea id="mainPrompt" placeholder="Prompt chính — Ctrl+Enter để gửi..."></textarea>
-
+ 
   <div id="controls">
-    <button id="redistributeBtn">⟳ Redistribute (Alt+Enter)</button>
-    <span class="hint">Gõ think vào box → Alt+Enter để redistribute</span>
-  </div>
+    <span id="modeIndicator">⟳ Cross-view</span>
+    <span class="hint" id="hintText">Ctrl+Enter để gửi</span>
+ 
+    <div id="accountBar">
+      <!-- Scratch save/load -->
+      <div class="accGroup">
+        <button class="scratchBtn" id="scratchSave" title="Lưu URL hiện tại của 4 LLM">S</button>
+        <button class="scratchBtn" id="scratchLoad" title="Load URL đã lưu">L</button>
+        <button class="scratchBtn" id="noteToggle" title="Note — ghi chú ý tưởng (Ctrl+S để lưu)">N</button>
+      </div>
 
+      <div class="accDivider"></div>
+
+      <!-- Master: đổi tất cả cùng lúc -->
+      <div class="accGroup">
+        <span class="accLabel all">ALL</span>
+
+        <input class="accInput" id="accAll" type="number" min="1" value="1">
+      </div>
+ 
+      <div class="accDivider"></div>
+ 
+      <!-- Per-LLM -->
+      <div class="accGroup">
+        <span class="accLabel gpt">GPT</span>
+        <input class="accInput" type="number" min="1" value="1" data-llm="chatgpt">
+      </div>
+      <div class="accGroup">
+        <span class="accLabel gem">GEM</span>
+        <input class="accInput" type="number" min="1" value="1" data-llm="gemini">
+      </div>
+      <div class="accGroup">
+        <span class="accLabel clo">CLO</span>
+        <input class="accInput" type="number" min="1" value="1" data-llm="claude">
+      </div>
+      <div class="accGroup">
+        <span class="accLabel grk">GRK</span>
+        <input class="accInput" type="number" min="1" value="1" data-llm="grok">
+      </div>
+    </div>
+  </div>
+ 
+  <div id="usageBar">
+    <span>⏱ Hôm nay: <span class="today-val" id="usageToday">0h00m00s</span></span>
+    <span>Hôm qua: <span class="val" id="usageYesterday">0h00m00s</span></span>
+    <span>Tổng: <span class="val" id="usageTotal">0h00m00s</span></span>
+  </div>
+  <div id="projectIndicator"></div>
+  <div id="systemBox"></div>
+ 
+  <!-- 4 col kết quả -->
   <div id="results">
-    <div class="col">
+    <div class="col chatgpt">
       <h4>ChatGPT</h4>
       <div class="resultBox" id="chatgptBox" contenteditable="true" spellcheck="false"></div>
     </div>
-    <div class="col">
+    <div class="col gemini">
       <h4>Gemini</h4>
       <div class="resultBox" id="geminiBox" contenteditable="true" spellcheck="false"></div>
     </div>
+    <div class="col claude">
+      <h4>Claude</h4>
+      <div class="resultBox" id="claudeBox" contenteditable="true" spellcheck="false"></div>
+    </div>
+    <div class="col grok">
+      <h4>Grok</h4>
+      <div class="resultBox" id="grokBox" contenteditable="true" spellcheck="false"></div>
+    </div>
+  </div>
+ 
+  <div id="noteWrap">
+    <h4>📝 Note — ý tưởng / ghi chú (Ctrl+S để lưu)</h4>
+    <textarea id="noteBox" spellcheck="false" placeholder="Ghi ý tưởng cải tiến, việc cần làm, note kỹ thuật..."></textarea>
   </div>
 
+  <div id="secondPromptWrap">
+    <h4>↳ Câu hỏi tiếp theo (Ctrl+Enter để gửi)</h4>
+    <textarea id="secondPrompt" placeholder="Nhập câu hỏi tiếp theo sau khi đã đọc think..."></textarea>
+  </div>
+ 
   <script>
     const { ipcRenderer } = require('electron')
-    const aiNodeSets = {
-  chatgptBox: new WeakSet(),
-  geminiBox: new WeakSet()
-}
-    const aiTextSets = {
-  chatgptBox: new Set(),
-  geminiBox: new Set()
+ 
+    const LLM_KEYS = ['chatgpt', 'gemini', 'claude', 'grok']
+    const BOX_IDS  = ['chatgptBox', 'geminiBox', 'claudeBox', 'grokBox']
+ 
+    let isCrossView = false
+    let mainPromptOldText = ''
+    let lastMainPromptText = '' 
+    let promptGeneration = 0
+ 
+    const mainPrompt   = document.getElementById('mainPrompt')
+    const secondPrompt = document.getElementById('secondPrompt')
+    const secondWrap   = document.getElementById('secondPromptWrap')
+    const modeIndicator = document.getElementById('modeIndicator')
+    const hintText     = document.getElementById('hintText')
+    const noteToggle = document.getElementById('noteToggle')
+    const noteWrap   = document.getElementById('noteWrap')
+    const noteBox    = document.getElementById('noteBox')
+    const resultsEl  = document.getElementById('results')
+    let isNoteOpen   = false
+
+function showNote() {
+  isNoteOpen = true
+  noteWrap.classList.add('visible')
+  resultsEl.style.display = 'none'
+  secondWrap.classList.remove('visible')
+  noteToggle.classList.add('active')
+  noteBox.focus()
 }
 
-document.addEventListener('copy', (e) => {
-  const sel = window.getSelection()
-  if (!sel.rangeCount) return
-  const div = document.createElement('div')
-  div.appendChild(sel.getRangeAt(0).cloneContents())
-  let text = ''
-  div.childNodes.forEach(n => {
-    text += n.textContent + (n.nodeName === 'P' ? '\n\n' : '')
-  })
-  e.clipboardData.setData('text/plain', text.trimEnd())
-  e.preventDefault()
+function hideNote() {
+  isNoteOpen = false
+  noteWrap.classList.remove('visible')
+  resultsEl.style.display = ''
+  noteToggle.classList.remove('active')
+}
+
+noteToggle.addEventListener('click', () => {
+  isNoteOpen ? hideNote() : showNote()
 })
 
-function setBoxContent(boxId, text) {
-  const box = document.getElementById(boxId)
-  box.innerHTML = ''
-
-  const lines = text.split('\n')
-  let prevWasSpacer = false
-
-  lines.forEach((line) => {
-    const p = document.createElement('p')
-    if (line.trim() === '') {
-      if (prevWasSpacer) return  // bỏ qua spacer liên tiếp
-      p.setAttribute('data-spacer', '1')
-      p.appendChild(document.createElement('br'))
-      prevWasSpacer = true
-    } else {
-      p.setAttribute('data-ai', '1')
-      p.setAttribute('data-original', line.trim())
-      p.appendChild(document.createTextNode(line))
-      prevWasSpacer = false
-    }
-    box.appendChild(p)
-  })
+function saveNoteNow() {
+  ipcRenderer.send('note-save', { text: noteBox.value })
 }
 
-    ipcRenderer.on('chatgpt-response', (event, text) => {
-      setBoxContent('chatgptBox', text)
-    })
+ipcRenderer.send('note-get')
+ipcRenderer.on('note-content', (event, text) => {
+  noteBox.value = text || ''
+})
 
-    ipcRenderer.on('gemini-response', (event, text) => {
-      setBoxContent('geminiBox', text)
-    })
+window.addEventListener('beforeunload', saveNoteNow)
 
-    function parseBoxNodes(boxId) {
-  const box = document.getElementById(boxId)
-  const segments = []
+setInterval(() => {
+  if (isNoteOpen) saveNoteNow()
+}, 30000)
+ 
+    // ── Nhận response ─────────────────────────────────────
+    let responsesReceived = 0
 
-  box.childNodes.forEach(node => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const t = node.textContent.trim()
-      if (t) segments.push({ type: 'think', text: t })
+LLM_KEYS.forEach((key, i) => {
+  ipcRenderer.on(`${key}-response`, (event, { result, gen }) => {
+    if (gen !== promptGeneration) {
+      console.log(`stale response ignored: ${key}`)
       return
     }
-    if (node.nodeType !== Node.ELEMENT_NODE) return
-
-    const t = node.textContent.trim()
-
-    // Spacer có text = user đã gõ vào đó → là think
-    if (node.hasAttribute('data-spacer')) {
-      if (t) segments.push({ type: 'think', text: t })
-      return
-    }
-
-    if (!t) return
-
-    const original = node.getAttribute('data-original')
-
-    if (original !== null) {
-      if (t === original) {
-        segments.push({ type: 'ai', text: t })
-      } else {
-        segments.push({ type: 'ai', text: original })
-        const added = t.replace(original, '').trim()
-        if (added) segments.push({ type: 'think', text: added })
-      }
-    } else {
-      segments.push({ type: 'think', text: t })
-    }
+    setBoxContent(BOX_IDS[i], result)
+    responsesReceived++
+    checkShowSecond()
   })
-
-  return segments
+})
+ 
+    function checkShowSecond() {
+      if (responsesReceived === 1) secondWrap.classList.add('visible')
+    }
+    //__clearPrompt__
+    function clearPrompt() {
+  mainPrompt.value = ''
+  mainPrompt.classList.remove('cmd-mode')
 }
-
-    function buildChatGPTPrompt(boxId) {
-      const segments = parseBoxNodes(boxId)
-      const parts = []
-
-      for (let i = 0; i < segments.length; i++) {
-        if (segments[i].type === 'think') {
-          let prevAI = ''
-          for (let j = i - 1; j >= 0; j--) {
-            if (segments[j].type === 'ai') {
-              prevAI = segments[j].text
-              break
-            }
-          }
-          if (prevAI) parts.push(prevAI)
-          parts.push(`[${segments[i].text}]`)
+ 
+    // ── setBoxContent ─────────────────────────────────────
+    function setBoxContent(boxId, text) {
+      const box = document.getElementById(boxId)
+      box.innerHTML = ''
+      const lines = text.split('\n')
+      let prevWasSpacer = false
+      lines.forEach(line => {
+        const p = document.createElement('p')
+        if (line.trim() === '') {
+          if (prevWasSpacer) return
+          p.setAttribute('data-spacer', '1')
+          p.appendChild(document.createElement('br'))
+          prevWasSpacer = true
+        } else {
+          p.setAttribute('data-ai', '1')
+          p.setAttribute('data-original', line.trim())
+          p.appendChild(document.createTextNode(line))
+          prevWasSpacer = false
         }
-      }
+        box.appendChild(p)
+      })
+    }
+ 
+    // ── parseBoxNodes ─────────────────────────────────────
+        function highlightTextNode(textNode, start, end) {
+      const L = textNode.textContent.length
+      if (end < L) textNode.splitText(end)
+      let middle = textNode
+      if (start > 0) middle = textNode.splitText(start)
+      const span = document.createElement('span')
+      span.setAttribute('data-broadcast', '1')
+      middle.parentNode.insertBefore(span, middle)
+      span.appendChild(middle)
+    }
 
+    function highlightSelection(range, box) {
+      const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT)
+      const targets = []
+      let node
+      while ((node = walker.nextNode())) {
+        if (range.intersectsNode(node)) targets.push(node)
+      }
+      targets.forEach(node => {
+        const start = node === range.startContainer ? range.startOffset : 0
+        const end   = node === range.endContainer   ? range.endOffset   : node.textContent.length
+        if (start < end) highlightTextNode(node, start, end)
+      })
+    }
+
+    function unhighlightSpan(span) {
+      const parent = span.parentNode
+      while (span.firstChild) parent.insertBefore(span.firstChild, span)
+      parent.removeChild(span)
+      parent.normalize()
+    }
+
+    function clearAllBroadcasts() {
+      BOX_IDS.forEach(id => {
+        Array.from(document.getElementById(id).querySelectorAll('span[data-broadcast]'))
+          .forEach(unhighlightSpan)
+      })
+    }
+
+    function buildBroadcastText(boxId) {
+      const box = document.getElementById(boxId)
+      const spans = Array.from(box.querySelectorAll('span[data-broadcast]'))
+      if (!spans.length) return ''
+      const lines = []
+      let lastP = null, buffer = []
+      spans.forEach(span => {
+        const p = span.closest('p')
+        if (p !== lastP && buffer.length) { lines.push(buffer.join(' ')); buffer = [] }
+        lastP = p
+        const t = extractTextWithBreaks(span).trim()
+        if (t) buffer.push(t)
+      })
+      if (buffer.length) lines.push(buffer.join(' '))
+      return lines.join('\n\n')
+    }
+
+    // Gộp nội dung bôi + think mới nhất của 1 LLM, dùng khi build prompt cho các LLM KHÁC
+    function buildLLMShareContent(boxId) {
+      const broadcastText = buildBroadcastText(boxId)
+      const core = buildCorePrompt(boxId)
+      const parts = []
+      if (broadcastText) parts.push(broadcastText)
+      if (core) parts.push(core)
       return parts.join('\n\n')
     }
 
-    function buildFullPromptRaw(boxId) {
+        function extractTextWithBreaks(node) {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent
+      if (node.nodeType !== Node.ELEMENT_NODE) return ''
+      if (node.tagName === 'BR') return '\n'
+      let text = ''
+      node.childNodes.forEach(child => { text += extractTextWithBreaks(child) })
+      return text
+    }
+
+    function parseBoxNodes(boxId) {
+      const box = document.getElementById(boxId)
+      const segments = []
+      box.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const t = node.textContent.trim()
+          if (t) segments.push({ type: 'think', text: t })
+          return
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return
+        const t = extractTextWithBreaks(node).trim()
+        if (node.hasAttribute('data-spacer')) {
+          if (t) segments.push({ type: 'think', text: t })
+          return
+        }
+        if (!t) return
+        const original = node.getAttribute('data-original')
+        if (original !== null) {
+          if (t === original) {
+            segments.push({ type: 'ai', text: t })
+          } else {
+            segments.push({ type: 'ai', text: original })
+            const added = t.replace(original, '').trim()
+            if (added) segments.push({ type: 'think', text: added })
+          }
+        } else {
+          segments.push({ type: 'think', text: t })
+        }
+      })
+      return segments
+    }
+ 
+    function hasShareableContent() {
+      return LLM_KEYS.some((k, i) => buildLLMShareContent(BOX_IDS[i]))
+    }
+ 
+    // ── Prompt builders ───────────────────────────────────
+    function buildCorePrompt(boxId) {
   const segments = parseBoxNodes(boxId)
-  return segments.map(s => {
-    if (s.type === 'think') return `[${s.text}]`
-    return s.text
-  }).join('\n\n')
-}
-    
-    function buildFullPrompt(boxId) {
-  const segments = parseBoxNodes(boxId)
+
   let lastThinkIdx = -1
   for (let i = segments.length - 1; i >= 0; i--) {
     if (segments[i].type === 'think') { lastThinkIdx = i; break }
   }
-  const relevant = lastThinkIdx === -1
-    ? segments
-    : segments.slice(0, lastThinkIdx + 1)
-  return relevant.map(s => {
-    if (s.type === 'think') return `[${s.text}]`
-    return s.text
-  }).join('\n\n')
+  if (lastThinkIdx === -1) return ''
+
+  let prevAI = ''
+  for (let j = lastThinkIdx - 1; j >= 0; j--) {
+    if (segments[j].type === 'ai') { prevAI = segments[j].text; break }
+  }
+
+  const parts = []
+  if (prevAI) parts.push(prevAI)
+  parts.push(`$ ${segments[lastThinkIdx].text}`)
+  return parts.join('\n\n')
+}
+ 
+    function buildFullPromptRaw(boxId) {
+      const segments = parseBoxNodes(boxId)
+      return segments.map(s =>
+        s.type === 'think' ? `[${s.text}]` : s.text
+      ).join('\n\n')
+    }
+ 
+    function buildFullPrompt(boxId) {
+      const segments = parseBoxNodes(boxId)
+      let lastThinkIdx = -1
+      for (let i = segments.length - 1; i >= 0; i--) {
+        if (segments[i].type === 'think') { lastThinkIdx = i; break }
+      }
+      const relevant = lastThinkIdx === -1 ? segments : segments.slice(0, lastThinkIdx + 1)
+      return relevant.map(s =>
+        s.type === 'think' ? `[${s.text}]` : s.text
+      ).join('\n\n')
+    }
+ 
+    // ── enterCrossView / exitCrossView ────────────────────
+    function enterCrossView() {
+      isCrossView = true
+      mainPromptOldText = lastMainPromptText || mainPrompt.value 
+      mainPrompt.classList.add('crossview-mode')
+      mainPrompt.placeholder = ''
+      secondWrap.classList.add('visible')
+      modeIndicator.classList.add('crossview')
+      hintText.textContent = 'Cross-view — Ctrl+Enter ở box dưới để gửi tiếp'
+      secondPrompt.focus()
+    }
+
+    function exitCrossView() {
+      isCrossView = false
+      mainPrompt.readOnly = false       // ← mở khóa lại
+      mainPrompt.placeholder = mainPromptOldText || 'Prompt chính — Ctrl+Enter để gửi...'
+      mainPromptOldText = ''
+      mainPrompt.classList.remove('crossview-mode')
+      clearPrompt()
+      secondWrap.classList.remove('visible')
+      secondPrompt.value = ''
+      modeIndicator.classList.remove('crossview')
+      hintText.textContent = 'Ctrl+Enter để gửi'
+      responsesReceived = 0
+    }
+ 
+    // ── redistribute ──────────────────────────────────────
+    function redistribute(extraPrompt = '') {
+  const mainText = mainPrompt.value.trim() || lastMainPromptText
+  lastMainPromptText = mainText
+
+  const cores = {}
+  const shares = {}
+  BOX_IDS.forEach((id, i) => {
+    cores[LLM_KEYS[i]]  = buildCorePrompt(id)
+    shares[LLM_KEYS[i]] = buildLLMShareContent(id)
+  })
+
+  const hasAnyContent = LLM_KEYS.some(k => shares[k]) || mainText || extraPrompt
+  if (!hasAnyContent) { console.log('redistribute aborted: nothing to send'); return }
+
+  const prompts = {}
+  LLM_KEYS.forEach(selfKey => {
+    const otherKeys = LLM_KEYS.filter(k => k !== selfKey)
+    let parts = []
+    if (mainText) parts.push(`$ ${mainText}`)
+    if (cores[selfKey]) parts.push(`# ${selfKey.toUpperCase()}\n${cores[selfKey]}`)
+    otherKeys.forEach(ok => {
+      if (shares[ok]) parts.push(`# ${ok.toUpperCase()}\n${shares[ok]}`)
+    })
+    if (extraPrompt) parts.push(`$ ${extraPrompt}`)
+    prompts[selfKey] = parts.join('\n\n').trim()
+  })
+
+  promptGeneration++
+  ipcRenderer.send('redistribute-prompt', { prompts, gen: promptGeneration })
+  clearAllBroadcasts()
+}
+ 
+    // ── Copy handler ──────────────────────────────────────
+        BOX_IDS.forEach(id => {
+      const box = document.getElementById(id)
+      box.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        const sel = window.getSelection()
+        if (sel && !sel.isCollapsed && sel.rangeCount > 0 &&
+            box.contains(sel.anchorNode) && box.contains(sel.focusNode)) {
+          highlightSelection(sel.getRangeAt(0), box)
+          sel.removeAllRanges()
+          return
+        }
+        const span = e.target.closest('span[data-broadcast]')
+        if (span && box.contains(span)) unhighlightSpan(span)
+      })
+    })
+
+    document.addEventListener('copy', (e) => {
+      if (e.target.tagName === 'TEXTAREA') return   // ← để trình duyệt tự xử lý copy trong textarea
+      const sel = window.getSelection()
+      if (!sel.rangeCount) return
+      const div = document.createElement('div')
+      div.appendChild(sel.getRangeAt(0).cloneContents())
+      let text = ''
+      div.childNodes.forEach(n => {
+        text += n.textContent + (n.nodeName === 'P' ? '\n\n' : '')
+      })
+      e.clipboardData.setData('text/plain', text.trimEnd())
+      e.preventDefault()
+    })
+ 
+    // ── Keyboard handler ──────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (!e.ctrlKey || e.key !== 'Enter') return
+
+      const focused = document.activeElement
+      if (focused === noteBox) return   // đang gõ Note — không tham gia luồng gửi
+
+      if (focused === secondPrompt) {
+        const extra = secondPrompt.value.trim()
+        redistribute(extra)
+        exitCrossView()
+        if (isNoteOpen) hideNote()
+        BOX_IDS.forEach(id => setBoxContent(id, 'Đang xử lý...'))
+        responsesReceived = 0
+        return
+      }
+
+          if (focused === mainPrompt) {
+      const text = mainPrompt.value.trim()
+
+      if (text.startsWith('/')) {
+        pushHistory(text)
+        cmdHistoryIdx = -1
+        clearPrompt()
+        parseCommand(text)
+        return
+      }
+
+      if (hasShareableContent()) {
+        redistribute(secondPrompt.value.trim())
+        exitCrossView()
+        if (isNoteOpen) hideNote()
+        BOX_IDS.forEach(id => setBoxContent(id, 'Đang xử lý...'))
+        responsesReceived = 0
+        return
+      }
+
+      if (text) {
+        lastMainPromptText = text
+        mainPrompt.readOnly = false
+        mainPrompt.placeholder = text
+        clearPrompt()
+        if (isNoteOpen) hideNote()
+        BOX_IDS.forEach(id => setBoxContent(id, 'Đang xử lý...'))
+        responsesReceived = 0
+        promptGeneration++
+        ipcRenderer.send('send-prompt', { text, gen: promptGeneration })
+        return
+      }
+      return
+    }
+
+    if (hasShareableContent()) {
+      if (isNoteOpen) hideNote()
+      redistribute()
+      enterCrossView()
+    }
+
+    })
+
+    document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === 's') {
+    e.preventDefault()
+    saveNoteNow()
+    showSystem('info', 'Đã lưu Note')
+    setTimeout(hideSystem, 1500)
+  }
+})
+ 
+    // ── Account switcher ──────────────────────────────────
+    document.getElementById('accAll').addEventListener('change', (e) => {
+      const n = parseInt(e.target.value) || 1
+      document.querySelectorAll('.accInput[data-llm]').forEach(input => {
+        input.value = n
+      })
+      ipcRenderer.send('switch-account', { llm: 'all', accountNum: n })
+    })
+ 
+    document.querySelectorAll('.accInput[data-llm]').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const llm = e.target.dataset.llm
+        const n   = parseInt(e.target.value) || 1
+        ipcRenderer.send('switch-account', { llm, accountNum: n })
+      })
+    })
+
+    // ── Scratch save/load ──────────────────────────────────
+    document.getElementById('scratchSave').addEventListener('click', () => {
+      ipcRenderer.send('scratch-save')
+    })
+    document.getElementById('scratchLoad').addEventListener('click', () => {
+      ipcRenderer.send('scratch-load')
+    })
+ 
+    // Sync state từ main process sau khi switch
+    ipcRenderer.on('account-state', (event, state) => {
+      Object.entries(state).forEach(([llm, n]) => {
+        const input = document.querySelector(`.accInput[data-llm="${llm}"]`)
+        if (input) input.value = n
+      })
+    })
+ 
+    // ── Usage update ──────────────────────────────────────
+    ipcRenderer.on('usage-update', (event, { today, yesterday, total }) => {
+      document.getElementById('usageToday').textContent     = today
+      document.getElementById('usageYesterday').textContent = yesterday
+      document.getElementById('usageTotal').textContent     = total
+    })
+    
+    // ── System box ────────────────────────────────────────────
+const systemBox = document.getElementById('systemBox')
+const projectIndicator = document.getElementById('projectIndicator')
+
+let confirmTimer = null
+let isConfirming = false
+let confirmResolve = null
+let pendingProjSet = null
+
+function showSystem(type, lines) {
+  systemBox.innerHTML = ''
+  const header = {
+    warn:  '⚠ ',
+    info:  '  ',
+    error: '✕ ',
+    debug: '  [DEBUG]\n'
+  }[type] || ''
+
+  const text = header + (Array.isArray(lines) ? lines.join('\n') : lines)
+  systemBox.textContent = text
+  systemBox.classList.add('visible')
 }
 
-    const mainPrompt = document.getElementById('mainPrompt')
+function hideSystem() {
+  systemBox.classList.remove('visible')
+  systemBox.innerHTML = ''
+}
 
-    function redistribute() {
-  const mainText = mainPrompt.value.trim()
+function updateProjectIndicator(n, label) {
+  if (!n) {
+    projectIndicator.textContent = ''
+    projectIndicator.classList.remove('active')
+  } else {
+    const name = label ? `"${label}"` : '(unnamed)'
+    projectIndicator.textContent = `Project ${n} — ${name}`
+    projectIndicator.classList.add('active')
+  }
+}
 
-  const chatgptSelf = buildFullPrompt('chatgptBox')      // cắt tại think cuối
-  const chatgptFull = buildFullPromptRaw('chatgptBox')   // toàn bộ — gửi cho Gemini
-  const geminiSelf  = buildFullPrompt('geminiBox')       // cắt tại think cuối
-  const geminiFull  = buildFullPromptRaw('geminiBox')    // toàn bộ — gửi cho ChatGPT
+// ── Confirm dialog (reusable) ─────────────────────────────
+function confirmDialog(lines, timeoutSec = 15) {
+  return new Promise((resolve) => {
+    if (isConfirming) {
+      showSystem('error', 'Cannot proceed — a previous confirmation is still pending')
+      resolve(null)
+      return
+    }
+    isConfirming = true
+    confirmResolve = resolve
+    let remaining = timeoutSec
 
-  if (!chatgptSelf && !geminiSelf) return
+    function render() {
+      showSystem('warn', [
+        ...lines,
+        '',
+        `[Enter] confirm  [Esc] cancel  ${remaining}...`
+      ])
+    }
+    render()
 
-  let finalChatGPT = mainText ? mainText + '\n\n' : ''
-  finalChatGPT += 'ChatGPT:\n' + chatgptSelf
-  if (geminiFull) finalChatGPT += '\n\nGemini:\n' + geminiFull
-
-  let finalGemini = mainText ? mainText + '\n\n' : ''
-  if (chatgptFull) finalGemini += 'ChatGPT:\n' + chatgptFull + '\n\n'
-  finalGemini += 'Gemini:\n' + geminiSelf
-
-  console.log('Sending chatgpt:', JSON.stringify(finalChatGPT.trim()))
-  console.log('Sending gemini:', JSON.stringify(finalGemini.trim()))
-
-  ipcRenderer.send('redistribute-prompt', {
-    chatgpt: finalChatGPT.trim(),
-    gemini:  finalGemini.trim()
+    confirmTimer = setInterval(() => {
+      remaining--
+      if (remaining <= 0) {
+        clearInterval(confirmTimer)
+        confirmTimer = null
+        isConfirming = false
+        confirmResolve = null
+        showSystem('info', 'Cancelled — no response')
+        setTimeout(hideSystem, 2000)
+        resolve(false)
+      } else {
+        render()
+      }
+    }, 1000)
   })
 }
 
-    document.getElementById('redistributeBtn')
-      .addEventListener('click', redistribute)
+function confirmRespond(yes) {
+  if (!isConfirming) return
+  clearInterval(confirmTimer)
+  confirmTimer = null
+  isConfirming = false
+  const cb = confirmResolve
+  confirmResolve = null
+  if (!yes) {
+    showSystem('info', 'Cancelled')
+    setTimeout(hideSystem, 1500)
+  }
+  cb(yes)
+}
 
-    document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 'Enter') {
-    const focused = document.activeElement
-    if (focused === mainPrompt) {
-      // Ctrl+Enter trên mainPrompt → gửi prompt mới
-      const text = mainPrompt.value.trim()
-      if (!text) return
-      setBoxContent('chatgptBox', 'Đang xử lý...')
-      setBoxContent('geminiBox', 'Đang xử lý...')
-      ipcRenderer.send('send-prompt', text)
+// ── Command history ───────────────────────────────────────
+let cmdHistory = []
+let cmdHistoryIdx = -1
+
+function pushHistory(cmd) {
+  if (cmdHistory[0] === cmd) return  // no consecutive duplicate
+  cmdHistory.unshift(cmd)
+  if (cmdHistory.length > 10) cmdHistory.pop()
+  // persist
+  try {
+    localStorage.setItem('cmdHistory', JSON.stringify(cmdHistory))
+  } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    const h = localStorage.getItem('cmdHistory')
+    if (h) cmdHistory = JSON.parse(h)
+  } catch(e) {}
+}
+loadHistory()
+
+// ── Command parser ────────────────────────────────────────
+async function parseCommand(raw) {
+  const text = raw.trim()
+  if (!text.startsWith('/')) return false
+
+  const parts = text.slice(1).trim().split(/\s+/)
+  const cmd = parts[0]?.toLowerCase()
+
+  // /help
+  if (cmd === 'help') {
+    showSystem('info', [
+      'AVAILABLE COMMANDS',
+      '──────────────────────────────────────────────────',
+      'PROJ — project management',
+      '  /proj set  <n> <llm> <url>   assign URL to LLM in project n',
+      '                                llm: 1=ChatGPT 2=Gemini 3=Claude 4=Grok',
+      '  /proj name <n> <label>       set display name for project n',
+      '  /proj acc  <n> <profile>     bind project n to account profile',
+      '  /proj go   <n>               switch to project n',
+      '  /proj del  <n>               delete entire project n',
+      '  /proj del  <n> <llm>         remove URL for one LLM in project n',
+      '',
+      'SESSION',
+      '  /new                         reset all LLMs to homepage, clear project',
+      '',
+      'DEBUG',
+      '  /debug log                   show last 20 log entries',
+      '  /debug state                 dump current runtime state',
+      '  /debug projects              show all saved projects',
+      '  /debug reset                 factory reset (requires confirmation)',
+      '',
+      '  ↑ / ↓                        recall command history (last 10)',
+      '──────────────────────────────────────────────────',
+    ])
+    return true
+  }
+
+  // /new
+  if (cmd === 'new') {
+    ipcRenderer.send('cmd-new')
+    return true
+  }
+
+  // /proj
+  if (cmd === 'proj') {
+    const sub = parts[1]?.toLowerCase()
+
+    if (sub === 'set') {
+  const n = parts[2], llmNum = parseInt(parts[3]), url = parts[4]
+  if (!n || !llmNum) {
+    showSystem('error', 'Usage: /proj set <n> <llm 1-4> [url]')
+    return true
+  }
+
+  if (!url) {
+    if (pendingProjSet || isConfirming) {
+      showSystem('error', 'Đang có một thao tác /proj set khác chờ xác nhận — hoàn tất trước đã')
+      return true
+    }
+    // Quan trắc URL hiện tại
+    ipcRenderer.send('get-llm-url', { llmNum })
+    // Response xử lý ở ipcRenderer.on('llm-url-result')
+    // Cần nhớ n để dùng sau
+    pendingProjSet = { n, llmNum }
+    return true
+  }
+
+  ipcRenderer.send('proj-set', { n, llmNum, url })
+  return true
+}
+
+    if (sub === 'name') {
+      const n = parts[2]
+      const label = parts.slice(3).join(' ')
+      if (!n || !label) {
+        showSystem('error', 'Usage: /proj name <n> <label>')
+        return true
+      }
+      ipcRenderer.send('proj-name', { n, label })
+      return true
+    }
+
+    if (sub === 'acc') {
+      const n = parts[2], profile = parseInt(parts[3])
+      if (!n || !profile) {
+        showSystem('error', 'Usage: /proj acc <n> <profile number>')
+        return true
+      }
+      ipcRenderer.send('proj-acc', { n, profile })
+      return true
+    }
+
+    if (sub === 'go') {
+      const n = parts[2]
+      if (!n) {
+        showSystem('error', 'Usage: /proj go <n>')
+        return true
+      }
+      ipcRenderer.send('proj-go', { n })
+      return true
+    }
+
+    if (sub === 'del') {
+      const n = parts[2]
+      const llmNum = parts[3] ? parseInt(parts[3]) : undefined
+      if (!n) {
+        showSystem('error', 'Usage: /proj del <n> [llm 1-4]')
+        return true
+      }
+      ipcRenderer.send('proj-del', { n, llmNum })
+      return true
+    }
+
+    showSystem('error', `Unknown proj subcommand: ${sub || '(none)'}. Try /help`)
+    return true
+  }
+
+  // /debug
+  if (cmd === 'debug') {
+    const sub = parts[1]?.toLowerCase()
+
+    if (sub === 'reset') {
+      const confirmed = await confirmDialog([
+        'This will permanently delete:',
+        '  • All saved projects (projects.json)',
+        '  • All usage history (usage-log.json)',
+        '',
+        'This action cannot be undone.',
+      ])
+      if (confirmed) {
+        ipcRenderer.send('cmd-debug-reset-confirmed')
+      }
+      return true
+    }
+
+    ipcRenderer.send('cmd-debug', { sub })
+    return true
+  }
+
+  showSystem('error', `Unknown command: /${cmd}. Try /help`)
+  return true
+}
+
+// ── IPC responses ─────────────────────────────────────────
+ipcRenderer.on('proj-result', async (event, res) => {
+  if (res.type === 'debug-log' || res.type === 'debug-state' || res.type === 'debug-projects') {
+    showSystem('debug', res.lines)
+    return
+  }
+  if (res.type === 'debug-reset-confirm') {
+    // handled in parseCommand directly
+    return
+  }
+  if (res.ok) {
+    showSystem('info', res.msg)
+    setTimeout(hideSystem, 3000)
+  } else {
+    showSystem('error', res.msg)
+    setTimeout(hideSystem, 4000)
+  }
+  // update project indicator
+  if ('current' in res) {
+    if (res.current) {
+      updateProjectIndicator(res.current.n, res.current.label)
     } else {
-      // Ctrl+Enter ở chỗ khác (box kết quả) → redistribute
-      redistribute()
+      updateProjectIndicator(null)
     }
   }
 })
-  </script>
 
+ipcRenderer.on('restore-complete', (event, { n, label }) => {
+  updateProjectIndicator(n, label)
+  showSystem('info', `Session restored — Project ${n} ${label ? '"' + label + '"' : ''}`)
+  setTimeout(hideSystem, 3000)
+})
+
+ipcRenderer.on('llm-url-result', async (event, { ok, url, llmNum, msg }) => {
+  if (!ok) {
+    showSystem('error', msg)
+    return
+  }
+  const llmName = ['ChatGPT', 'Gemini', 'Claude', 'Grok'][llmNum - 1]
+  const { n } = pendingProjSet
+  pendingProjSet = null
+  const confirmed = await confirmDialog([
+    `Current URL for ${llmName}:`,
+    url,
+    '',
+    `Assign to Project ${n} / ${llmName}?`,
+  ])
+  if (confirmed) {
+    ipcRenderer.send('proj-set', { n, llmNum, url })
+  }
+})
+
+ipcRenderer.on('scratch-result', (event, res) => {
+  if (res.ok) {
+    showSystem('info', res.msg)
+    setTimeout(hideSystem, 3000)
+  } else {
+    showSystem('error', res.msg)
+    setTimeout(hideSystem, 4000)
+  }
+})
+
+// ── Keyboard: command history + confirm ───────────────────
+mainPrompt.addEventListener('keydown', (e) => {
+
+  // History navigation (chỉ khi đang gõ lệnh /)
+  if (e.key === 'ArrowUp' && mainPrompt.value.startsWith('/')) {
+    e.preventDefault()
+    if (cmdHistoryIdx < cmdHistory.length - 1) {
+      cmdHistoryIdx++
+      mainPrompt.value = cmdHistory[cmdHistoryIdx]
+    }
+    return
+  }
+  if (e.key === 'ArrowDown' && mainPrompt.value.startsWith('/')) {
+    e.preventDefault()
+    if (cmdHistoryIdx > 0) {
+      cmdHistoryIdx--
+      mainPrompt.value = cmdHistory[cmdHistoryIdx]
+    } else {
+      cmdHistoryIdx = -1
+      clearPrompt()
+    }
+    return
+  }
+  if (e.key === 'Escape' && systemBox.classList.contains('visible')) {
+    hideSystem()
+  }
+})
+
+document.addEventListener('keydown', (e) => {
+  if (!isConfirming) return
+  if (e.key === 'Enter')  { e.preventDefault(); confirmRespond(true) }
+  if (e.key === 'Escape') { e.preventDefault(); confirmRespond(false) }
+}, true)
+
+mainPrompt.addEventListener('input', () => {
+  if (mainPrompt.value.startsWith('/')) {
+    mainPrompt.classList.add('cmd-mode')
+  } else {
+    mainPrompt.classList.remove('cmd-mode')
+  }
+})
+
+document.addEventListener('DOMContentLoaded', () => {
+  let activeSTab = null
+  document.querySelectorAll('.stab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const llm = tab.dataset.llm
+      if (activeSTab === llm) {
+        ipcRenderer.send('tab-toggle', { llm: null })
+        tab.classList.remove('active')
+        activeSTab = null
+      } else {
+        document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'))
+        tab.classList.add('active')
+        activeSTab = llm
+        ipcRenderer.send('tab-toggle', { llm })
+      }
+    })
+  })
+})
+  </script>
+ 
+ <div id="sidetabs">
+  <div class="stab gpt" data-llm="chatgpt">GPT</div>
+  <div class="stab gem" data-llm="gemini">GEM</div>
+  <div class="stab clo" data-llm="claude">CLO</div>
+  <div class="stab grk" data-llm="grok">GRK</div>
+</div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 {
   "name": "my-new-app",
-  "productName": "my-new-app",
+  "productName": "LLM Pipeline",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "index.js",
@@ -10,11 +10,29 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "build": "electron-builder --win"
   },
   "keywords": [],
   "author": "uso",
   "license": "MIT",
+  "build": {
+    "appId": "com.yourname.llmpipeline",
+    "productName": "LLM Pipeline",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+  "index.js",
+  "control.html",
+  "package.json",
+  "appdata/**",
+  "node_modules/**"
+],
+    "directories": {
+      "output": "dist"
+    }
+  },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
   },
@@ -27,6 +45,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron/fuses": "^1.8.0",
-    "electron": "42.0.1"
+    "electron": "42.0.1",
+    "electron-builder": "^26.15.3"
   }
 }

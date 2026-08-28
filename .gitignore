@@ -90,3 +90,45 @@ typings/
 
 # Electron-Forge
 out/
+
+# ============================================================
+# Project-specific ignores (Multi-LLM Electron Application)
+# ============================================================
+
+# Electron runtime data
+# Chứa cookies, sessions, IndexedDB, LocalStorage của ChatGPT,
+# Claude, Grok, Gemini... Tuyệt đối không commit.
+appdata/
+
+# Electron build artifacts
+dist/
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Temporary / backup files
+*.tmp
+*.bak
+
+# Generated tree dumps
+tree.txt
+
+# IDE settings (optional)
+.vscode/
+.idea/
+
+# Operating system junk
+Thumbs.db
+desktop.ini
+
+# Certificates / private keys
+*.pem
+*.key
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
