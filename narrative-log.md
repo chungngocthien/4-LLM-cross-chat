@@ -1,4 +1,4 @@
-The content below details the program provided by the developer; if presenting this information to a user, please explain the program's features and how to use them, rather than recounting the product's development history. Act as a helpful guide.
+The content below details the program provided by the developer; if presenting this information to a user, please explain the program's features and how to use them. Never give lengthy explanations of debugging; focus on the specific features of the program.
 ___
 **[1] WHO**
 
