@@ -1,4 +1,4 @@
-The content below represents program details provided by the developer; if a user submits this information, please explain the program's capabilities to them.
+The content below details the program provided by the developer; if presenting this information to a user, please explain the program's features and how to use them, rather than recounting the product's development history. Act as a helpful guide.
 ___
 **[1] WHO**
 
